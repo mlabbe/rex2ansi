@@ -3,6 +3,8 @@ package reximage
 import (
 	"os"
 	"log"
+	"fmt"
+	"errors"
 	"compress/gzip"
 	"encoding/binary"
 )
@@ -21,8 +23,8 @@ type RexCell struct {
 }
 
 type RexLayer struct {
-	Width   uint32
-	Height  uint32
+	Width   int32
+	Height  int32
 	Cells   []RexCell
 }
 
@@ -86,23 +88,23 @@ func Read(file *os.File, verbose bool) (*RexImage, error) {
 	// open gzip
 	reader, err := gzip.NewReader(file)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var image RexImage
 	err = binary.Read(reader, binary.LittleEndian, &image.Version)
 	if err != nil {
-		log.Fatal("Could not read version")
+		return nil, errors.New("Could not read verison")
 	}
 
 	err = binary.Read(reader, binary.LittleEndian, &image.LayerCount)
 	if err != nil {
-		log.Fatal("Could not read layer count")
+		return nil, errors.New("Could not read layer count")
 	}
 
 	if verbose {
 		log.Printf("Version: %d 0x%x", image.Version, image.Version)
-		log.Printf("NumLayers: %d 0x%x", image.LayerCount, image.LayerCount)
+		log.Printf("NumLayers: %d", image.LayerCount)
 	}
 
 	image.Layers = make([]RexLayer, image.LayerCount)
@@ -112,18 +114,21 @@ func Read(file *os.File, verbose bool) (*RexImage, error) {
 
 		err = binary.Read(reader, binary.LittleEndian, &layer.Width)
 		if err != nil {
-			log.Fatalf("Could not read width on layer %d", i)
+			return nil, errors.New(
+				fmt.Sprintf("Could not read width on layer %d", i))
 		}
 
 		err = binary.Read(reader, binary.LittleEndian, &layer.Height)
 		if err != nil {
-			log.Fatalf("Could not read height on layer %d", i)
+			return nil, errors.New(
+				fmt.Sprintf("Could not read height on layer %d", i))
 		}
 
 		cellCount := layer.Width * layer.Height
 		if cellCount <= 0 {
-			log.Fatalf("Invalid cell count on layer %d: %d (%xx%x)",
-				i, cellCount, layer.Width, layer.Height)
+			return nil, errors.New(
+				fmt.Sprintf("Invalid cell count on layer %d: %d (%xx%x)",
+					i, cellCount, layer.Width, layer.Height))
 		}
 		layer.Cells = make([]RexCell, cellCount)
 
@@ -131,11 +136,11 @@ func Read(file *os.File, verbose bool) (*RexImage, error) {
 			c := RexCell{}
 			err := binary.Read(reader, binary.LittleEndian, &c)
 			if err != nil {
-				log.Fatalf("Could not read cell data")
+				return nil, errors.New("Could not read cell data")
 			}
 
 			// transpose column-major to row-major
-			k := uint32(j)
+			k := int32(j)
 			x, y := k/layer.Height, k%layer.Height
 			layer.Cells[y*layer.Width + x] = c
 		}

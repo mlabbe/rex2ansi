@@ -7,10 +7,13 @@ package main
 // 5. Support --output-dir
 // 6. Handle stdio
 // 7. Error out on input file not being rexpaint.
+// 8. unflattened files should use cursor manip
+// 9. gofmt
 
 import (
 	"os"
 	"log"
+	"fmt"
 	"path/filepath"
 	"strings"
 	"github.com/alecthomas/kingpin"
@@ -41,6 +44,7 @@ func main() {
 
 	kingpin.Parse()
 
+	errorCount := 0
 	for _, path := range *paths {
 		if *verbose {
 			log.Printf("Reading File: %s", path)
@@ -55,7 +59,11 @@ func main() {
 		}
 		defer inFile.Close()
 
-		image, _ := reximage.Read(inFile, *verbose)
+		image, err := reximage.Read(inFile, *verbose)
+		if err != nil {
+			errorCount++
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		}
 
 		if !*skipFlatten {
 			image.Flatten()
@@ -81,5 +89,5 @@ func main() {
 		}
 	}
 
-	// successful exit
+	os.Exit(errorCount)
 }
