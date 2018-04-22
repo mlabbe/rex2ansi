@@ -3,12 +3,9 @@ package main
 //
 // todos:
 //
-// 4. Dont' fatal out in Read(), return error
-// 5. Support --output-dir
-// 6. Handle stdio
-// 7. Error out on input file not being rexpaint.
 // 8. unflattened files should use cursor manip
 // 9. gofmt
+// 10. switch from convert-utf 8 to no-utf8, do both by default
 
 import (
 	"os"
@@ -24,20 +21,23 @@ var (
 	verbose     = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	skipFlatten = kingpin.Flag("skip-flatten", "Don't flatten image").Short('s').Bool()
 	convUTF8    = kingpin.Flag("convert-utf8", "Convert codepage 437 to utf-8").Short('c').Bool()
+	outputDir   = kingpin.Flag("output-dir", "Directory to write files to").Short('o').Default(".").ExistingDir()
 
 	// positional, bash wildcard-friendly
 	paths   = kingpin.Arg("files", "files to operate on").Required().ExistingFiles()
 )
 
 func getOutPath(inFile string) string {
+	// get the filename without extension or path
 	baseName := strings.TrimSuffix(inFile, filepath.Ext(inFile))
+	baseName = filepath.Base(baseName)
 
 	ext := "ans"
 	if *convUTF8 {
 		ext = "u8ans" /* I made this up */
 	}
 
-	return baseName + "." + ext
+	return *outputDir + "/" + baseName + "." + ext
 }
 
 func main() {
@@ -62,7 +62,8 @@ func main() {
 		image, err := reximage.Read(inFile, *verbose)
 		if err != nil {
 			errorCount++
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			fmt.Fprintf(os.Stderr, "Error reading %s: %v\n", path, err)
+			continue;
 		}
 
 		if !*skipFlatten {
