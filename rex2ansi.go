@@ -3,7 +3,6 @@ package main
 //
 // todos:
 //
-// 8. unflattened files should use cursor manip
 // 9. gofmt
 // 10. switch from convert-utf 8 to no-utf8, do both by default
 
@@ -20,20 +19,21 @@ import (
 var (
 	verbose     = kingpin.Flag("verbose", "Verbose mode.").Short('v').Bool()
 	skipFlatten = kingpin.Flag("skip-flatten", "Don't flatten image").Short('s').Bool()
-	convUTF8    = kingpin.Flag("convert-utf8", "Convert codepage 437 to utf-8").Short('c').Bool()
+	onlyUTF8    = kingpin.Flag("only-utf8", "Only generate utf-8 ANSI").Bool()
+	onlyCP437   = kingpin.Flag("only-cp437", "Only codepage 437 (classic) ANSI").Bool()
 	outputDir   = kingpin.Flag("output-dir", "Directory to write files to").Short('o').Default(".").ExistingDir()
 
 	// positional, bash wildcard-friendly
 	paths   = kingpin.Arg("files", "files to operate on").Required().ExistingFiles()
 )
 
-func getOutPath(inFile string) string {
+func getOutPath(inFile string, utf8 bool) string {
 	// get the filename without extension or path
 	baseName := strings.TrimSuffix(inFile, filepath.Ext(inFile))
 	baseName = filepath.Base(baseName)
 
 	ext := "ans"
-	if *convUTF8 {
+	if utf8 {
 		ext = "u8ans" /* I made this up */
 	}
 
@@ -71,22 +71,40 @@ func main() {
 		}
 
 		//
-		// Write classic ansi file
+		// Write output files
 		//
-		outPath := getOutPath(path)
-		if *verbose {
-			log.Printf("Writing File: %s", outPath)
-		}
-		outFile, err := os.Create(outPath)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer outFile.Close()
 
-		if *convUTF8 {
-			exportUTF8ANSI(image, outFile)
-		} else {
-			exportClassicANSI(image, outFile)
+
+		// utf-8
+		if !*onlyCP437 {
+			outPath := getOutPath(path, true)
+			if *verbose {
+				log.Printf("Writing file: %s", outPath)
+			}
+
+			outH, err := os.Create(outPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer outH.Close()
+
+			exportUTF8ANSI(image, outH);
+		}
+
+		// cp437
+		if !*onlyUTF8 {
+			outPath := getOutPath(path, false)
+			if *verbose {
+				log.Printf("Writing file: %s", outPath)
+			}
+
+			outH, err := os.Create(outPath)
+			if err != nil {
+				log.Fatal(err)
+			}
+			defer outH.Close()
+
+			exportClassicANSI(image, outH)
 		}
 	}
 
