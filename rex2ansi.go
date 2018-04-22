@@ -7,13 +7,13 @@ package main
 // 10. switch from convert-utf 8 to no-utf8, do both by default
 
 import (
-	"os"
-	"log"
 	"fmt"
+	"frogtoss.com/rex2ansi/reximage"
+	"github.com/alecthomas/kingpin"
+	"log"
+	"os"
 	"path/filepath"
 	"strings"
-	"github.com/alecthomas/kingpin"
-	"frogtoss.com/rex2ansi/reximage"
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 	outputDir   = kingpin.Flag("output-dir", "Directory to write files to").Short('o').Default(".").ExistingDir()
 
 	// positional, bash wildcard-friendly
-	paths   = kingpin.Arg("files", "files to operate on").Required().ExistingFiles()
+	paths = kingpin.Arg("files", "files to operate on").Required().ExistingFiles()
 )
 
 func getOutPath(inFile string, utf8 bool) string {
@@ -63,7 +63,7 @@ func main() {
 		if err != nil {
 			errorCount++
 			fmt.Fprintf(os.Stderr, "Error reading %s: %v\n", path, err)
-			continue;
+			continue
 		}
 
 		if !*skipFlatten {
@@ -73,7 +73,6 @@ func main() {
 		//
 		// Write output files
 		//
-
 
 		// utf-8
 		if !*onlyCP437 {
@@ -88,7 +87,7 @@ func main() {
 			}
 			defer outH.Close()
 
-			exportUTF8ANSI(image, outH);
+			exportUTF8ANSI(image, outH)
 		}
 
 		// cp437

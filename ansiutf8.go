@@ -1,9 +1,9 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"frogtoss.com/rex2ansi/reximage"
+	"os"
 )
 
 // ansiclassic is the catch-all phrase for codepage 437 "ASCII" ansi,
@@ -11,7 +11,6 @@ import (
 // must have codepage 437 installed on your terminal with a font that
 // has the codepage 437 charset.  This is not modern, but it is what
 // you will need to display these art files in a Windows console.
-
 
 func reset() string {
 	return "\u001b[0m"
@@ -33,10 +32,10 @@ func exportUTF8ANSI(image *reximage.RexImage, outFile *os.File) {
 
 		strideRemaining := int(layer.Width)
 
-		lastFG := reximage.RexRGB{0,0,0}
+		lastFG := reximage.RexRGB{0, 0, 0}
 		fgReset := true
 
-		lastBG := reximage.RexRGB{0,0,0}
+		lastBG := reximage.RexRGB{0, 0, 0}
 		bgReset := true
 
 		for j := 0; j < int(layer.Height*layer.Width); j++ {
