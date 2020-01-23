@@ -1,11 +1,5 @@
 package main
 
-//
-// todos:
-//
-// 9. gofmt
-// 10. switch from convert-utf 8 to no-utf8, do both by default
-
 import (
 	"fmt"
 	"log"
