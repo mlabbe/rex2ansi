@@ -22,6 +22,6 @@ Windows, Mac and Linux all have 24-bit ANSI art support in their various termina
 
 ## Usage ##
 
- 1. `go build frogtoss.com/rex2ansi`
+ 1. `go build github.com/mlabbe/rex2ansi`
  
  2. `./rex2ansi --help`

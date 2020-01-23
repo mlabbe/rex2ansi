@@ -1,9 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"frogtoss.com/rex2ansi/reximage"
+	"io/ioutil"
+	"log"
 	"os"
+
+	"github.com/mlabbe/rex2ansi/reximage"
+
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 )
 
 // ansiclassic is the catch-all phrase for codepage 437 "ASCII" ansi,
@@ -26,7 +33,7 @@ func bg24(red, green, blue byte) string {
 
 func exportUTF8ANSI(image *reximage.RexImage, outFile *os.File) {
 
-	// Draw it back out
+	// write it back out
 	for i := 0; i < int(image.LayerCount); i++ {
 		layer := &image.Layers[i]
 
@@ -43,6 +50,7 @@ func exportUTF8ANSI(image *reximage.RexImage, outFile *os.File) {
 
 			glyph := cell.Glyph
 
+			// fixme: no need to repeat reset character after first, just do spaces
 			if cell.IsTransparent() {
 				outFile.WriteString(reset() + " ")
 				fgReset = true
@@ -62,8 +70,15 @@ func exportUTF8ANSI(image *reximage.RexImage, outFile *os.File) {
 				}
 
 				// glyph
-				// implicit conversion to utf-8
-				outFile.WriteString(fmt.Sprintf("%c", glyph))
+				glyphBytes := []byte{glyph}
+
+				transformer := transform.NewReader(bytes.NewReader(glyphBytes),
+					charmap.CodePage437.NewDecoder())
+				decodedBytes, err := ioutil.ReadAll(transformer)
+				if err != nil {
+					log.Fatal("Could not convert sequence")
+				}
+				outFile.WriteString(string(decodedBytes))
 			}
 
 			strideRemaining--

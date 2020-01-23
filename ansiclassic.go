@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"frogtoss.com/rex2ansi/reximage"
 	"os"
+
+	"github.com/mlabbe/rex2ansi/reximage"
 )
 
 // ansiclassic is the catch-all phrase for codepage 437 "ASCII" ansi,

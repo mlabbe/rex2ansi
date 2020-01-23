@@ -8,12 +8,13 @@ package main
 
 import (
 	"fmt"
-	"frogtoss.com/rex2ansi/reximage"
-	"github.com/alecthomas/kingpin"
 	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/alecthomas/kingpin"
+	"github.com/mlabbe/rex2ansi/reximage"
 )
 
 var (
@@ -22,9 +23,12 @@ var (
 	onlyUTF8    = kingpin.Flag("only-utf8", "Only generate utf-8 ANSI").Bool()
 	onlyCP437   = kingpin.Flag("only-cp437", "Only codepage 437 (classic) ANSI").Bool()
 	outputDir   = kingpin.Flag("output-dir", "Directory to write files to").Short('o').Default(".").ExistingDir()
+	version     = kingpin.Flag("version", "print version and exit").Bool()
 
 	// positional, bash wildcard-friendly
-	paths = kingpin.Arg("files", "files to operate on").Required().ExistingFiles()
+	paths = kingpin.Arg("files", "files to operate on").ExistingFiles()
+
+	Version = 2
 )
 
 func getOutPath(inFile string, utf8 bool) string {
@@ -43,6 +47,16 @@ func getOutPath(inFile string, utf8 bool) string {
 func main() {
 
 	kingpin.Parse()
+
+	if *version {
+		log.Printf("rex2ansi version %d", Version)
+		os.Exit(0)
+	}
+
+	if len(*paths) == 0 {
+		log.Printf("No files specified.  Try --help")
+		os.Exit(1)
+	}
 
 	errorCount := 0
 	for _, path := range *paths {
